@@ -43,16 +43,17 @@ html, body {
   width: 14.2857%; /* 100% / 7 days */
   box-sizing: border-box;
   text-align: center;
-  border: 1px solid #ddd;
+  /*! border: 1px solid #ddd; */
   min-height: 50px;
   padding: 4px;
   font-size: 14px;
 }
 
 .day-header {
-  background: #f0f0f0;
+  background: #131314;
   font-weight: bold;
   min-height: 30px;
+  color: #9fa2a1;
 }
 
 .day-cell {
@@ -81,6 +82,8 @@ html, body {
   border-left: 3px solid #007bff;
   font-size: 12px;
   text-align: left;
+  background: #131314;
+  color: #cacaca;
 }
 
 /* Modal styling */
