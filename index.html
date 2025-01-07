@@ -3,78 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Simple Calendar App</title>
-  <style>
-    /* Basic reset */
-    body, html {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background: #fafafa;
-    }
-
-    #calendar-container {
-  width: 1024px;
-  height: 768px;
-  margin: 0 auto;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  /* You can tweak these to ensure the grid fits nicely if needed */
-  overflow: hidden;
-}
-
-
-    .calendar-header {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .calendar-grid {
-      display: -webkit-box;
-      display: -ms-flexbox;
-      display: flex;
-      -webkit-box-wrap: wrap;
-          -ms-flex-wrap: wrap;
-              flex-wrap: wrap;
-    }
-
-    .day-header, .day-cell {
-      width: 14.2857%; /* 100% / 7 days */
-      box-sizing: border-box;
-      text-align: center;
-      border: 1px solid #ddd;
-      min-height: 60px;
-      padding: 4px;
-      font-size: 14px;
-    }
-
-    .day-header {
-      background: #f0f0f0;
-      font-weight: bold;
-    }
-
-    .day-cell {
-      vertical-align: top;
-    }
-
-    .day-number {
-      font-weight: bold;
-      margin-bottom: 5px;
-      display: block;
-    }
-
-    .event {
-      background: #e6f7ff;
-      margin: 2px 0;
-      padding: 2px;
-      border-left: 3px solid #007bff;
-      font-size: 12px;
-      text-align: left;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
 <div id="calendar-container">
