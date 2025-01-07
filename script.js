@@ -60,12 +60,12 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   var calendarContainer = document.getElementById("calendar-container");
 
   // Create a "Today" button in the header (top-left corner)
-  var todayBtn = document.createElement("button");
-  todayBtn.textContent = "Today";
-  todayBtn.style.float = "left";
-  todayBtn.style.marginRight = "10px";
-  todayBtn.addEventListener("click", resetToCurrentMonth);
-  headerEl.parentNode.insertBefore(todayBtn, headerEl);
+var todayBtn = document.createElement("button");
+todayBtn.textContent = "Today";
+todayBtn.className = "today-btn"; // Assign a class to the button
+todayBtn.addEventListener("click", resetToCurrentMonth);
+headerEl.parentNode.insertBefore(todayBtn, headerEl);
+
 
   // Month names for display
   var monthNames = [

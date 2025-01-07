@@ -121,3 +121,9 @@ html, body {
   border-bottom: 1px solid #ccc;
   padding-bottom: 4px;
 }
+
+.today-btn {
+  position: fixed;
+  left: 20px;
+}
+
