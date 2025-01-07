@@ -1,11 +1,20 @@
 <!DOCTYPE html>
-<h<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>Simple Calendar App</title>
+
+  <!-- Enable Full-Screen Mode on iOS 9.3.5 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Simple Calendar App">
+
+  <!-- iPad 2 Non-Retina Icon -->
+  <link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72.png">
+
   <link rel="stylesheet" href="styles.css">
 </head>
+
 
 <body>
 
@@ -22,7 +31,6 @@
     <div class="day-header">土</div>
   </div>
 
-  <!-- The grid of actual days (dates) will be inserted here by JS -->
   <div id="calendar-days" class="calendar-grid"></div>
 </div>
 

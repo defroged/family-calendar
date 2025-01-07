@@ -179,10 +179,6 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
     }
   }
 }
-
-
-
-
   /** 
    * Modal handling 
    */
