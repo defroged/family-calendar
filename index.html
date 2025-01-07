@@ -12,13 +12,13 @@
   <div id="calendar-header" class="calendar-header"></div>
   <div class="calendar-grid">
     <!-- Day Name Headers (Sun, Mon, etc.) -->
-    <div class="day-header">Sun</div>
-    <div class="day-header">Mon</div>
-    <div class="day-header">Tue</div>
-    <div class="day-header">Wed</div>
-    <div class="day-header">Thu</div>
-    <div class="day-header">Fri</div>
-    <div class="day-header">Sat</div>
+    <div class="day-header">日</div>
+    <div class="day-header">月</div>
+    <div class="day-header">火</div>
+    <div class="day-header">水</div>
+    <div class="day-header">木</div>
+    <div class="day-header">金</div>
+    <div class="day-header">土</div>
   </div>
 
   <!-- The grid of actual days (dates) will be inserted here by JS -->
@@ -56,8 +56,8 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   // Populate the header text (e.g., "January 2025")
   var headerEl = document.getElementById("calendar-header");
   var monthNames = [
-    "January", "February", "March", "April", "May", "June", 
-    "July", "August", "September", "October", "November", "December"
+    "１月", "２月", "３月", "４月", "５月", "６月", 
+    "７月", "８月", "９月", "１０月", "１１月", "１２月"
   ];
   headerEl.textContent = monthNames[currentMonth] + " " + currentYear;
 
