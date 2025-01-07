@@ -151,7 +151,6 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   for (var i = 0; i < items.length; i++) {
     var ev = items[i];
 
-    // If it's an all-day event, we set a default time of 00:00:00 (no 'Z')
     var startStr = ev.start.dateTime
       ? ev.start.dateTime
       : (ev.start.date + "T00:00:00");
@@ -159,15 +158,11 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
       ? ev.end.dateTime
       : (ev.end.date + "T23:59:59");
 
-    // Just parse normally — let the offset in the string do the work
     var startDate = new Date(startStr);
     var endDate = new Date(endStr);
 
-    // Determine which date cell to display (in local time)
     var day = startDate.getDate();
-    var cellIndex = startDay + day - 1;
 
-    // Create an event info object if you’re storing for a modal
     var eventInfo = {
       summary: ev.summary || "(No Title)",
       start: startDate,
@@ -175,22 +170,56 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
       calendarLabel: calendar.label,
       calendarColor: calendar.color
     };
+
     if (!dayEventsMap[day]) {
       dayEventsMap[day] = [];
     }
     dayEventsMap[day].push(eventInfo);
+  }
 
-    // Show a small marker in the cell
-    if (cellIndex >= 0 && cellIndex < calendarDaysEl.getElementsByClassName("day-cell").length) {
-      var eventEl = document.createElement("div");
-      eventEl.className = "event";
-      eventEl.textContent = calendar.label;
-      eventEl.style.borderLeft = "3px solid " + calendar.color;
-      eventEl.style.background = "#fff";
-      calendarDaysEl.getElementsByClassName("day-cell")[cellIndex].appendChild(eventEl);
+  // After storing events, refresh the day cells to display
+  // them in chronological order.
+  refreshDayCells();
+}
+
+/**
+ * Clear and re-render the day-cell events for the current month,
+ * so that events appear sorted by start time.
+ */
+function refreshDayCells() {
+  // Get all day cells (they should already be on the page)
+  var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
+
+  // Loop over each date in the current month
+  for (var d = 1; d <= daysInMonth; d++) {
+    var cellIndex = startDay + d - 1;
+    if (cellIndex >= 0 && cellIndex < dayCells.length) {
+      var dayCell = dayCells[cellIndex];
+
+      // Remove any existing event markers in this cell
+      while (dayCell.getElementsByClassName("event")[0]) {
+        dayCell.removeChild(dayCell.getElementsByClassName("event")[0]);
+      }
+
+      // Sort the events for this day by ascending start time
+      var eventsForDay = dayEventsMap[d] || [];
+      eventsForDay.sort(function(a, b) {
+        return a.start - b.start;
+      });
+
+      // Now re-append them in chronological order
+      for (var j = 0; j < eventsForDay.length; j++) {
+        var eventEl = document.createElement("div");
+        eventEl.className = "event";
+        eventEl.textContent = eventsForDay[j].calendarLabel;
+        eventEl.style.borderLeft = "3px solid " + eventsForDay[j].calendarColor;
+        eventEl.style.background = "#fff";
+        dayCell.appendChild(eventEl);
+      }
     }
   }
 }
+
   /** 
    * Modal handling 
    */
