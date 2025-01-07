@@ -1,7 +1,7 @@
 var CALENDARS = [
   {
     id: "ronward.english@gmail.com",
-    label: "BS",
+    label: "Blue Star",
     color: "#489160"
   },
     {
