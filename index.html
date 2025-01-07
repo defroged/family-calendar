@@ -2,82 +2,115 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Simple Calendar App</title>
+  <!-- Force width and height for older iPad screens -->
+  <meta name="viewport" content="width=1024, initial-scale=1.0">
+  <title>Multi-Calendar App</title>
   <style>
-    /* Basic reset */
-    body, html {
+    /* Force 1024×768 layout to match iPad's older screens */
+    html, body {
       margin: 0;
       padding: 0;
-      font-family: sans-serif;
+      width: 1024px;
+      height: 768px;
       background: #fafafa;
     }
 
     #calendar-container {
-      width: 90%;
-      max-width: 600px;
-      margin: 20px auto;
+      width: 1024px;
+      height: 768px;
+      margin: 0 auto; /* center horizontally if possible */
       background: #fff;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
+      box-sizing: border-box;
+      overflow: hidden; /* hide any overflow if we exceed bounds */
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+          -ms-flex-direction: column;
+              flex-direction: column;
     }
 
     .calendar-header {
       text-align: center;
       font-weight: bold;
-      margin-bottom: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #ccc;
     }
 
     .calendar-grid {
+      /* Use the remaining space for the grid */
+      -webkit-box-flex: 1;
+          -ms-flex: 1;
+              flex: 1;
       display: -webkit-box;
       display: -ms-flexbox;
       display: flex;
-      -webkit-box-wrap: wrap;
-          -ms-flex-wrap: wrap;
-              flex-wrap: wrap;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+          -ms-flex-direction: column;
+              flex-direction: column;
+    }
+
+    .day-row {
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-flex: 1;
+          -ms-flex: 1;
+              flex: 1;
     }
 
     .day-header, .day-cell {
-      width: 14.2857%; /* 100% / 7 days */
+      -webkit-box-flex: 1;
+          -ms-flex: 1;
+              flex: 1;
       box-sizing: border-box;
       text-align: center;
       border: 1px solid #ddd;
-      min-height: 60px;
-      padding: 4px;
       font-size: 14px;
+      position: relative;
     }
 
     .day-header {
       background: #f0f0f0;
       font-weight: bold;
+      height: 35px;
+      line-height: 35px;
     }
 
     .day-cell {
       vertical-align: top;
+      /* If needed, adjust font-size or spacing to ensure everything fits */
     }
 
     .day-number {
       font-weight: bold;
-      margin-bottom: 5px;
       display: block;
+      margin: 2px;
     }
 
+    /* A generic event box; we'll override background color in JS. */
     .event {
-      background: #e6f7ff;
-      margin: 2px 0;
-      padding: 2px;
-      border-left: 3px solid #007bff;
+      margin: 2px auto;
+      padding: 2px 4px;
+      border-radius: 4px;
       font-size: 12px;
-      text-align: left;
+      color: #fff; /* White text on colored background */
+      text-align: center;
+      width: 80%; /* Slightly narrower than cell width */
     }
   </style>
 </head>
 <body>
 
 <div id="calendar-container">
+  <!-- Calendar Title -->
   <div id="calendar-header" class="calendar-header"></div>
-  <div class="calendar-grid">
-    <!-- Day Name Headers (Sun, Mon, etc.) -->
+
+  <!-- Day Name Headers (Sun, Mon, Tue, etc.) -->
+  <div class="day-row">
     <div class="day-header">Sun</div>
     <div class="day-header">Mon</div>
     <div class="day-header">Tue</div>
@@ -87,29 +120,43 @@
     <div class="day-header">Sat</div>
   </div>
 
-  <!-- The grid of actual days (dates) will be inserted here by JS -->
+  <!-- Main grid for the days of the month -->
   <div id="calendar-days" class="calendar-grid"></div>
 </div>
 
 <script>
 /**
  * ======= CONFIGURATION =======
- * Replace these with your actual calendar ID and API key.
+ * We’ll store multiple calendars, each with an ID, a label, and a color.
+ * Make sure these Google Calendars are publicly accessible, or handle OAuth separately.
  */
-var CALENDAR_ID = "ronward.english@gmail.com";
+var CALENDARS = [
+  {
+    id: "ronward.english@gmail.com",
+    label: "BS",
+    color: "blue"
+  },
+  {
+    id: "c_1au77uvsbhjjkbbn0u0o1nvfdo@group.calendar.google.com",
+    label: "杉並",
+    color: "orange"
+  }
+];
+
+// Replace with your Google API key
 var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
 
 /**
- * Create a simple monthly calendar and fetch events from Google Calendar.
- * This is set up for older iOS devices, so we're using ES5 syntax and XHR.
+ * Create a simple monthly calendar and fetch events from multiple Google Calendars.
+ * This is set up for older iOS devices, so we use ES5 syntax and XHR.
  */
 (function() {
-  // Get today's date
+  // 1) Basic date info
   var today = new Date();
   var currentYear = today.getFullYear();
-  var currentMonth = today.getMonth(); // 0-based (0 = January)
-  
-  // Populate the header text (e.g., "January 2025")
+  var currentMonth = today.getMonth(); // 0-based (0 = Jan)
+
+  // 2) Populate the header text (e.g., "January 2025")
   var headerEl = document.getElementById("calendar-header");
   var monthNames = [
     "January", "February", "March", "April", "May", "June", 
@@ -117,53 +164,56 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   ];
   headerEl.textContent = monthNames[currentMonth] + " " + currentYear;
 
-  // Build the monthly calendar structure (empty boxes + date numbers)
+  // 3) Build the calendar grid (rows and columns for each day)
+  //    - We’ll have at most 6 rows of 7 days (42 cells total).
   var calendarDaysEl = document.getElementById("calendar-days");
-  // Clear any existing HTML
-  calendarDaysEl.innerHTML = "";
+  calendarDaysEl.innerHTML = ""; // Clear old data if any
 
-  // Create a date for the first day of this month
+  // Make a date for 1st of the month
   var firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-  // Find the day of the week the first day falls on (0=Sun, 1=Mon, etc.)
-  var startDay = firstDayOfMonth.getDay();
+  var startDay = firstDayOfMonth.getDay(); // 0=Sun, 1=Mon, etc.
 
-  // Number of days in this month
+  // Days in this month
   var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  // We need a total of (startDay) blank cells + (daysInMonth) real day cells
-  // Then if the last day doesn't end on Saturday, we may add some blank cells at the end.
-  
-  // First, add blank cells for days before 1st of the month
-  var i;
-  for (i = 0; i < startDay; i++) {
-    var blankCell = document.createElement("div");
-    blankCell.className = "day-cell";
-    calendarDaysEl.appendChild(blankCell);
+  // We can calculate how many total slots we need (up to 42).
+  var totalCells = 42; // 6 weeks × 7 days
+  var dayCount = 1;
+
+  // Create up to 6 rows
+  for (var row = 0; row < 6; row++) {
+    var rowEl = document.createElement("div");
+    rowEl.className = "day-row";
+
+    // Each row has 7 cells
+    for (var col = 0; col < 7; col++) {
+      var cellIndex = row * 7 + col;
+      var dayCell = document.createElement("div");
+      dayCell.className = "day-cell";
+
+      // If cellIndex >= startDay and dayCount <= daysInMonth, we have a real date
+      if (cellIndex >= startDay && dayCount <= daysInMonth) {
+        // Display the day number
+        var dayNumber = document.createElement("span");
+        dayNumber.className = "day-number";
+        dayNumber.textContent = dayCount;
+        dayCell.appendChild(dayNumber);
+
+        // Store a data attribute so we can place events easily
+        dayCell.setAttribute("data-day", dayCount);
+
+        dayCount++;
+      }
+      rowEl.appendChild(dayCell);
+    }
+    calendarDaysEl.appendChild(rowEl);
   }
 
-  // Next, add cells for each day of the month
-  for (i = 1; i <= daysInMonth; i++) {
-    var dayCell = document.createElement("div");
-    dayCell.className = "day-cell";
-
-    // Show the day number
-    var dayNumber = document.createElement("span");
-    dayNumber.className = "day-number";
-    dayNumber.textContent = i;
-    dayCell.appendChild(dayNumber);
-
-    calendarDaysEl.appendChild(dayCell);
-  }
-
-  /**
-   * Now fetch events from Google Calendar for the current month.
-   * We’ll filter events to only show those within this month.
-   */
+  // 4) We’ll fetch events for each calendar
   var startDate = new Date(currentYear, currentMonth, 1);
   var endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59);
 
-  // Format to RFC3339 for Google API:
-  // e.g., 2025-01-01T00:00:00Z
+  // Format to RFC3339
   function toRFC3339(dateObj) {
     return dateObj.getFullYear() + "-" +
       pad(dateObj.getMonth() + 1) + "-" +
@@ -172,56 +222,66 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
       pad(dateObj.getMinutes()) + ":" +
       pad(dateObj.getSeconds()) + "Z";
   }
-
-  function pad(num) {
-    return (num < 10 ? "0" : "") + num;
-  }
+  function pad(num) { return (num < 10 ? "0" : "") + num; }
 
   var timeMin = toRFC3339(startDate);
   var timeMax = toRFC3339(endDate);
 
-  var url = "https://www.googleapis.com/calendar/v3/calendars/" + 
-            encodeURIComponent(CALENDAR_ID) + 
-            "/events?key=" + API_KEY + 
-            "&timeMin=" + timeMin + 
-            "&timeMax=" + timeMax + 
-            "&singleEvents=true&orderBy=startTime";
-
-  // Use XHR instead of fetch to support older iOS Safari
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", url, true);
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      var data = JSON.parse(xhr.responseText);
-      if (data && data.items) {
-        renderEvents(data.items);
-      }
-    }
-  };
-  xhr.send();
+  // We’ll loop over our CALENDARS array and fetch events for each
+  for (var i = 0; i < CALENDARS.length; i++) {
+    fetchCalendarEvents(CALENDARS[i], timeMin, timeMax);
+  }
 
   /**
-   * Renders events in the calendar.
-   * items - an array of events from the Google Calendar API.
+   * Fetches events for one calendar using XHR.
+   * @param {Object} calendarObj - An object with { id, label, color }
+   * @param {string} timeMin
+   * @param {string} timeMax
    */
-  function renderEvents(items) {
-    // We'll iterate over each event, parse the date, then find the right cell to insert it into.
+  function fetchCalendarEvents(calendarObj, timeMin, timeMax) {
+    var url = "https://www.googleapis.com/calendar/v3/calendars/" +
+              encodeURIComponent(calendarObj.id) +
+              "/events?key=" + API_KEY +
+              "&timeMin=" + timeMin +
+              "&timeMax=" + timeMax +
+              "&singleEvents=true&orderBy=startTime";
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        var data = JSON.parse(xhr.responseText);
+        if (data && data.items) {
+          renderEvents(data.items, calendarObj.label, calendarObj.color);
+        }
+      }
+    };
+    xhr.send();
+  }
+
+  /**
+   * Render events onto the calendar.
+   * @param {Array} items - Array of Google Calendar event objects
+   * @param {string} label - The short label to display (e.g., "BS" or "TM")
+   * @param {string} color - The color to use (e.g., "blue" or "orange")
+   */
+  function renderEvents(items, label, color) {
     for (var i = 0; i < items.length; i++) {
       var ev = items[i];
-      var startStr = ev.start.date || ev.start.dateTime;  // date if all-day, dateTime otherwise
-      // Convert to JS Date
+      var startStr = ev.start.date || ev.start.dateTime; // If all-day, "date"; otherwise "dateTime"
       var eventDate = new Date(startStr);
       var day = eventDate.getDate();
 
-      // The day-cell for day X is offset by startDay + X - 1 in the .calendar-grid
-      var cellIndex = startDay + day - 1;
-      var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
+      // Find the cell with data-day = day
+      var dayCells = document.querySelectorAll('[data-day="' + day + '"]');
 
-      if (cellIndex >= 0 && cellIndex < dayCells.length) {
+      // If such a cell exists, append an event element
+      if (dayCells.length > 0) {
         var eventEl = document.createElement("div");
         eventEl.className = "event";
-        eventEl.textContent = ev.summary || "(No title)";
-        dayCells[cellIndex].appendChild(eventEl);
+        eventEl.textContent = label;         // Use the specified label
+        eventEl.style.backgroundColor = color; // Set background to the chosen color
+        dayCells[0].appendChild(eventEl);
       }
     }
   }
