@@ -199,34 +199,49 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   });
 
   function openModal(dayNum) {
-    // Clear existing list
-    modalEventsList.innerHTML = "";
+  // Calculate full date
+  var dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  var dateObj = new Date(currentYear, currentMonth, dayNum);
+  var dayName = dayNames[dateObj.getDay()];
+  var monthName = monthNames[dateObj.getMonth()];
+  var dateNumber = dateObj.getDate();
+  var year = dateObj.getFullYear();
 
-    // Retrieve events for that day
-    var events = dayEventsMap[dayNum] || [];
-    // Sort events by start time ascending
-    events.sort(function(a, b) {
-      return a.start - b.start;
-    });
-
-    // Build the event list
-    for (var i = 0; i < events.length; i++) {
-      var item = events[i];
-      // Convert times to something readable
-      var startTime = formatTime(item.start);
-      var endTime = formatTime(item.end);
-
-      var itemDiv = document.createElement("div");
-      itemDiv.className = "modal-event-item";
-      itemDiv.innerHTML =
-        "<div><strong>" + item.summary + "</strong></div>" +
-        "<div>" + startTime + " - " + endTime + "</div>" +
-        "<div style='color:" + item.calendarColor + "'>" + item.calendarLabel + "</div>";
-      modalEventsList.appendChild(itemDiv);
-    }
-
-    modalOverlay.style.display = "flex";
+  // Replace the title text
+  var modalTitleEl = document.getElementById("modal-title");
+  if (modalTitleEl) {
+    modalTitleEl.textContent = dayName + ", " + monthName + " " + dateNumber + " " + year;
   }
+
+  // Clear existing list
+  modalEventsList.innerHTML = "";
+
+  // Retrieve events for that day
+  var events = dayEventsMap[dayNum] || [];
+  // Sort events by start time ascending
+  events.sort(function(a, b) {
+    return a.start - b.start;
+  });
+
+  // Build the event list
+  for (var i = 0; i < events.length; i++) {
+    var item = events[i];
+    // Convert times to something readable
+    var startTime = formatTime(item.start);
+    var endTime = formatTime(item.end);
+
+    var itemDiv = document.createElement("div");
+    itemDiv.className = "modal-event-item";
+    itemDiv.innerHTML =
+      "<div><strong>" + item.summary + "</strong></div>" +
+      "<div>" + startTime + " - " + endTime + "</div>" +
+      "<div style='color:" + item.calendarColor + "'>" + item.calendarLabel + "</div>";
+    modalEventsList.appendChild(itemDiv);
+  }
+
+  modalOverlay.style.display = "flex";
+}
+
 
   function closeModal() {
     modalOverlay.style.display = "none";
