@@ -2,7 +2,7 @@ var CALENDARS = [
   {
     id: "ronward.english@gmail.com",
     label: "BS",
-    color: "blue"
+    color: "#489160"
   },
     {
     id: "tm-kids.com_i066m9p1pvu8ouuknb4hal74u4@group.calendar.google.com",
@@ -323,7 +323,7 @@ headerEl.parentNode.insertBefore(todayBtn, headerEl);
           eventEl.className = "event";
           eventEl.textContent = eventsForDay[j].calendarLabel;
           eventEl.style.borderLeft = "3px solid " + eventsForDay[j].calendarColor;
-          eventEl.style.background = "#fff";
+          eventEl.style.background = "#131314";
           dayCell.appendChild(eventEl);
         }
       }

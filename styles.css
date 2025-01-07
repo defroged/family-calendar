@@ -11,7 +11,7 @@ html, body {
   padding: 0;
   width: 1024px;    /* If you truly want a fixed 1024×768 */
   height: 768px;    /* on older iPads, be mindful of status bar */
-  background: #fafafa;
+  background: #131314;
   overflow: hidden; /* No scrollbars */
   font-family: sans-serif;
 }
@@ -19,8 +19,8 @@ html, body {
 #calendar-container {
   width: 100%;
   height: 100%;
-  background: #fff;
-  border: 1px solid #ccc;
+  background: #131314;
+  border: 1px solid #272829;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -52,13 +52,14 @@ html, body {
 .day-header {
   background: #f0f0f0;
   font-weight: bold;
+  min-height: 30px;
 }
 
 .day-cell {
   width: 14.2857%;
   min-height: 50px;
   box-sizing: border-box;
-  border: 1px solid #ddd;
+  border: 1px solid #272829;
   text-align: center;
   padding: 4px;
   cursor: pointer;
@@ -70,6 +71,7 @@ html, body {
   font-weight: bold;
   margin-bottom: 5px;
   display: block;
+  color: #b9b9b9;
 }
 
 .event {
