@@ -117,9 +117,8 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
     "/events?key=" + API_KEY +
     "&timeMin=" + timeMin +
     "&timeMax=" + timeMax +
-    "&singleEvents=true&orderBy=startTime" +
-    // Add the timeZone parameter
-    "&timeZone=Asia/Tokyo";
+    "&singleEvents=true&orderBy=startTime";
+    // no timeZone parameter included
 
   var xhr = new XMLHttpRequest();
   xhr.open("GET", url, true);
@@ -135,26 +134,32 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
 }
 
 
+
   function renderEvents(items, calendar) {
   for (var i = 0; i < items.length; i++) {
     var ev = items[i];
-    // Start time could be date (all-day) or dateTime
-    // No "Z" (UTC) at the end if you expect Google to return JST times.
-    // If start.dateTime is undefined, treat it as all-day by appending "T00:00:00" (no extra 'Z').
-    var startStr = ev.start.dateTime ? ev.start.dateTime : (ev.start.date + "T00:00:00");
-    var endStr = ev.end.dateTime ? ev.end.dateTime : (ev.end.date + "T23:59:59");
 
-    // Parse as normal, relying on the fact that Google returned JST
+    // If it's an all-day event, we set a default time of 00:00:00 (no 'Z')
+    var startStr = ev.start.dateTime
+      ? ev.start.dateTime
+      : (ev.start.date + "T00:00:00");
+    var endStr = ev.end.dateTime
+      ? ev.end.dateTime
+      : (ev.end.date + "T23:59:59");
+
+    // Just parse normally — let the offset in the string do the work
     var startDate = new Date(startStr);
+    var endDate = new Date(endStr);
+
+    // Determine which date cell to display (in local time)
     var day = startDate.getDate();
-
     var cellIndex = startDay + day - 1;
-    var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
 
+    // Create an event info object if you’re storing for a modal
     var eventInfo = {
       summary: ev.summary || "(No Title)",
       start: startDate,
-      end: new Date(endStr),
+      end: endDate,
       calendarLabel: calendar.label,
       calendarColor: calendar.color
     };
@@ -163,17 +168,18 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
     }
     dayEventsMap[day].push(eventInfo);
 
-    // Also show a marker in the cell
-    if (cellIndex >= 0 && cellIndex < dayCells.length) {
+    // Show a small marker in the cell
+    if (cellIndex >= 0 && cellIndex < calendarDaysEl.getElementsByClassName("day-cell").length) {
       var eventEl = document.createElement("div");
       eventEl.className = "event";
       eventEl.textContent = calendar.label;
       eventEl.style.borderLeft = "3px solid " + calendar.color;
       eventEl.style.background = "#fff";
-      dayCells[cellIndex].appendChild(eventEl);
+      calendarDaysEl.getElementsByClassName("day-cell")[cellIndex].appendChild(eventEl);
     }
   }
 }
+
 
 
 
