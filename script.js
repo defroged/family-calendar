@@ -4,6 +4,11 @@ var CALENDARS = [
     label: "BS",
     color: "blue"
   },
+    {
+    id: "tm-kids.com_i066m9p1pvu8ouuknb4hal74u4@group.calendar.google.com",
+    label: "本町",
+    color: "orange"
+  },
   {
     id: "c_1au77uvsbhjjkbbn0u0o1nvfdo@group.calendar.google.com",
     label: "杉並",
