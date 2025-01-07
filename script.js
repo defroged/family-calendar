@@ -211,29 +211,31 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   });
 
   function openModal(dayNum) {
-  // Calculate full date
-  var dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  var dateObj = new Date(currentYear, currentMonth, dayNum);
-  var dayName = dayNames[dateObj.getDay()];
-  var monthName = monthNames[dateObj.getMonth()];
-  var dateNumber = dateObj.getDate();
-  var year = dateObj.getFullYear();
-
-  // Replace the title text
-  var modalTitleEl = document.getElementById("modal-title");
-  if (modalTitleEl) {
-    modalTitleEl.textContent = dayName + ", " + monthName + " " + dateNumber + " " + year;
-  }
-
   // Clear existing list
   modalEventsList.innerHTML = "";
 
   // Retrieve events for that day
   var events = dayEventsMap[dayNum] || [];
+  
   // Sort events by start time ascending
   events.sort(function(a, b) {
     return a.start - b.start;
   });
+
+  // Get full date of the selected day
+  var selectedDate = new Date(currentYear, currentMonth, dayNum);
+  var dayOfWeek = selectedDate.getDay(); // 0 (Sun) to 6 (Sat)
+  var daysOfWeekJP = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
+  var dayJP = daysOfWeekJP[dayOfWeek];
+
+  // Format date in Japanese style (e.g., 2025年1月7日)
+  var dateJP = selectedDate.getFullYear() + "年" +
+               (selectedDate.getMonth() + 1) + "月" +
+               selectedDate.getDate() + "日";
+
+  // Update modal header to show the date and day in Japanese
+  var modalHeader = document.getElementById("modal-header");
+  modalHeader.textContent = dateJP + " (" + dayJP + ")";
 
   // Build the event list
   for (var i = 0; i < events.length; i++) {
@@ -253,6 +255,7 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
 
   modalOverlay.style.display = "flex";
 }
+
 
 
   function closeModal() {
