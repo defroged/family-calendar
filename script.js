@@ -9,6 +9,11 @@ var CALENDARS = [
     label: "本町",
     color: "orange"
   },
+      {
+    id: "c_a10cfefde2a5de52589bc01f1c2899c8d7035acfe6349bb7b7e47177a56b592e@group.calendar.google.com",
+    label: "ひびき",
+    color: "orange"
+  },
   {
     id: "c_1au77uvsbhjjkbbn0u0o1nvfdo@group.calendar.google.com",
     label: "杉並",
