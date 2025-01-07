@@ -323,6 +323,7 @@ headerEl.parentNode.insertBefore(todayBtn, headerEl);
           eventEl.className = "event";
           eventEl.textContent = eventsForDay[j].calendarLabel;
           eventEl.style.borderLeft = "3px solid " + eventsForDay[j].calendarColor;
+		  eventEl.style.boxShadow = "3px 0 0 0 " + eventsForDay[j].calendarColor;
           eventEl.style.background = "#131314";
           dayCell.appendChild(eventEl);
         }

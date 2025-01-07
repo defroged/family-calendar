@@ -78,7 +78,6 @@ html, body {
 }
 
 .event {
-  background: #e6f7ff;
   margin: 2px 0;
   padding: 2px;
   border-left: 3px solid #007bff;
@@ -86,6 +85,11 @@ html, body {
   text-align: left;
   background: #131314;
   color: #cacaca;
+  /* Current border-left for color indication */
+  border-left: 3px solid #007bff;
+
+  /* Extend the border visually to the right */
+  box-shadow: 3px 0 0 0 #007bff;
 }
 
 /* Modal styling */
