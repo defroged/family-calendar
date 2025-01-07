@@ -29,6 +29,23 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
  * This is set up for older iOS devices, so we're using ES5 syntax and XHR.
  */
 (function() {
+	// Only preventDefault if the touch is NOT inside .modal-content
+  document.addEventListener("touchmove", function(e) {
+    if (!isInsideModalContent(e.target)) {
+      e.preventDefault();
+    }
+  }, false);
+
+  // Helper function to detect whether 'target' is inside an element with class="modal-content"
+  function isInsideModalContent(target) {
+    while (target) {
+      if (target.classList && target.classList.contains("modal-content")) {
+        return true;
+      }
+      target = target.parentNode;
+    }
+    return false;
+  }
   // -------------------------
   // Global variables & setup
   // -------------------------
