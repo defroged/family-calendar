@@ -106,10 +106,22 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   fetchEventsForAllCalendars();
 
   function fetchEventsForAllCalendars() {
+  // Function to fetch events for all calendars
+  function fetchEvents() {
     for (var i = 0; i < CALENDARS.length; i++) {
       fetchEventsForOneCalendar(CALENDARS[i]);
     }
   }
+
+  // Initial fetch
+  fetchEvents();
+
+  // Refresh events every 5 minutes (300,000 milliseconds)
+  setInterval(function() {
+    fetchEvents();
+  }, 300000);
+}
+
 
   function fetchEventsForOneCalendar(calendar) {
   var url = "https://www.googleapis.com/calendar/v3/calendars/" +
