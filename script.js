@@ -139,46 +139,66 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   for (var i = 0; i < items.length; i++) {
     var ev = items[i];
 
-    // If it's an all-day event, we set a default time of 00:00:00 (no 'Z')
-    var startStr = ev.start.dateTime
-      ? ev.start.dateTime
-      : (ev.start.date + "T00:00:00");
+    // If it's an all-day event, we have only 'date' (e.g. "2025-01-06").
+    // Otherwise we have 'dateTime' (e.g. "2025-01-06T15:30:00+09:00").
+
+    var startStr = ev.start.dateTime 
+      ? ev.start.dateTime 
+      : (ev.start.date + "T00:00:00"); 
+
+    // ---- 1) Strip out any offset like "+09:00" or "Z" for the day/time ----
+    // We'll only look at the first 19 chars: "YYYY-MM-DDTHH:MM:SS"
+    // Example: "2025-01-06T15:30:00+09:00" => "2025-01-06T15:30:00"
+    var baseStartStr = startStr.substring(0, 19);
+
+    // ---- 2) Extract date "YYYY-MM-DD" and time "HH:MM:SS" separately ----
+    // baseStartStr looks like "2025-01-06T15:30:00"
+    var datePart = baseStartStr.substring(0, 10);   // "2025-01-06"
+    var timePart = baseStartStr.substring(11, 16);  // "15:30"
+
+    // Parse the day-of-month from datePart
+    // e.g. datePart.substring(8, 10) => "06"
+    var dayNum = parseInt(datePart.substring(8, 10), 10); // 6
+
+    // We'll do the same for end if you need to show end times
+    // Otherwise you can skip it
     var endStr = ev.end.dateTime
       ? ev.end.dateTime
       : (ev.end.date + "T23:59:59");
+    var baseEndStr = endStr.substring(0, 19);
+    var endTimePart = baseEndStr.substring(11, 16);
 
-    // Just parse normally — let the offset in the string do the work
-    var startDate = new Date(startStr);
-    var endDate = new Date(endStr);
+    // ---- 3) Decide which day-cell to place it on using dayNum ----
+    var cellIndex = startDay + dayNum - 1;
+    var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
+    if (cellIndex < 0 || cellIndex >= dayCells.length) continue;
 
-    // Determine which date cell to display (in local time)
-    var day = startDate.getDate();
-    var cellIndex = startDay + day - 1;
-
-    // Create an event info object if you’re storing for a modal
+    // ---- 4) Save event data in dayEventsMap if you have a modal system ----
     var eventInfo = {
       summary: ev.summary || "(No Title)",
-      start: startDate,
-      end: endDate,
+      // For the time, let's keep it as HH:MM from the string
+      displayTime: timePart,
+      // We might store the original date/time string if needed
+      originalStart: startStr,
+      endTime: endTimePart,
       calendarLabel: calendar.label,
       calendarColor: calendar.color
     };
-    if (!dayEventsMap[day]) {
-      dayEventsMap[day] = [];
+    if (!dayEventsMap[dayNum]) {
+      dayEventsMap[dayNum] = [];
     }
-    dayEventsMap[day].push(eventInfo);
+    dayEventsMap[dayNum].push(eventInfo);
 
-    // Show a small marker in the cell
-    if (cellIndex >= 0 && cellIndex < calendarDaysEl.getElementsByClassName("day-cell").length) {
-      var eventEl = document.createElement("div");
-      eventEl.className = "event";
-      eventEl.textContent = calendar.label;
-      eventEl.style.borderLeft = "3px solid " + calendar.color;
-      eventEl.style.background = "#fff";
-      calendarDaysEl.getElementsByClassName("day-cell")[cellIndex].appendChild(eventEl);
-    }
+    // ---- 5) Visually mark the cell (like a small “calendar.label” pill) ----
+    var eventEl = document.createElement("div");
+    eventEl.className = "event";
+    eventEl.textContent = calendar.label;
+    eventEl.style.borderLeft = "3px solid " + calendar.color;
+    eventEl.style.background = "#fff";
+    dayCells[cellIndex].appendChild(eventEl);
   }
 }
+
 
 
 
