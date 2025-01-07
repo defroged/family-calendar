@@ -112,63 +112,76 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   }
 
   function fetchEventsForOneCalendar(calendar) {
-    var url = "https://www.googleapis.com/calendar/v3/calendars/" +
-      encodeURIComponent(calendar.id) +
-      "/events?key=" + API_KEY +
-      "&timeMin=" + timeMin +
-      "&timeMax=" + timeMax +
-      "&singleEvents=true&orderBy=startTime";
+  var url = "https://www.googleapis.com/calendar/v3/calendars/" +
+    encodeURIComponent(calendar.id) +
+    "/events?key=" + API_KEY +
+    "&timeMin=" + timeMin +
+    "&timeMax=" + timeMax +
+    "&singleEvents=true&orderBy=startTime" +
+    // Add the timeZone parameter
+    "&timeZone=Asia/Tokyo";
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        var data = JSON.parse(xhr.responseText);
-        if (data && data.items) {
-          renderEvents(data.items, calendar);
-        }
-      }
-    };
-    xhr.send();
-  }
-
-  function renderEvents(items, calendar) {
-    for (var i = 0; i < items.length; i++) {
-      var ev = items[i];
-      // Start time could be date (all-day) or dateTime
-      var startStr = ev.start.dateTime ? ev.start.dateTime : (ev.start.date + "T00:00:00");
-      var endStr = ev.end.dateTime ? ev.end.dateTime : (ev.end.date + "T23:59:59");
-      var eventDate = new Date(startStr);
-      var day = eventDate.getDate();
-
-      var cellIndex = startDay + day - 1;
-      var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
-
-      var eventInfo = {
-        summary: ev.summary || "(No Title)",
-        start: new Date(startStr),
-        end: new Date(endStr),
-        calendarLabel: calendar.label,
-        calendarColor: calendar.color
-      };
-
-      // Store the event data in our map for use in the modal
-      if (!dayEventsMap[day]) {
-        dayEventsMap[day] = [];
-      }
-      dayEventsMap[day].push(eventInfo);
-
-      // Also show a small marker in the cell
-      if (cellIndex >= 0 && cellIndex < dayCells.length) {
-        var eventEl = document.createElement("div");
-        eventEl.className = "event";
-        eventEl.textContent = calendar.label;
-        eventEl.style.borderLeft = "3px solid " + calendar.color;
-        eventEl.style.background = "#fff";
-        dayCells[cellIndex].appendChild(eventEl);
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var data = JSON.parse(xhr.responseText);
+      if (data && data.items) {
+        renderEvents(data.items, calendar);
       }
     }
+  };
+  xhr.send();
+}
+
+
+  function renderEvents(items, calendar) {
+  for (var i = 0; i < items.length; i++) {
+    var ev = items[i];
+    // Make sure we handle both all-day (date) and timed (dateTime)
+    var startStr = ev.start.dateTime ? ev.start.dateTime : (ev.start.date + "T00:00:00Z");
+    
+    // Convert to date object in UTC
+    var utcDate = new Date(startStr);
+
+    /**
+     * Now adjust for UTC+9 manually if you want to be absolutely sure:
+     *   9 hours = 9 * 60 = 540 minutes
+     */
+    var jstDate = new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
+
+    // Determine the day in JST
+    var day = jstDate.getDate();
+
+    var cellIndex = startDay + day - 1;
+    var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
+
+    // Record the event for the modal’s dayEventsMap, if needed:
+    var eventInfo = {
+      summary: ev.summary || "(No Title)",
+      start: jstDate, 
+      // you can also adjust end if you need the correct end day/time
+      end: ev.end.dateTime ? new Date(new Date(ev.end.dateTime).getTime() + (9 * 60 * 60 * 1000)) : null,
+      calendarLabel: calendar.label,
+      calendarColor: calendar.color
+    };
+    if (!dayEventsMap[day]) {
+      dayEventsMap[day] = [];
+    }
+    dayEventsMap[day].push(eventInfo);
+
+    // Show a marker in the cell
+    if (cellIndex >= 0 && cellIndex < dayCells.length) {
+      var eventEl = document.createElement("div");
+      eventEl.className = "event";
+      eventEl.textContent = calendar.label;
+      eventEl.style.borderLeft = "3px solid " + calendar.color;
+      eventEl.style.background = "#fff";
+      dayCells[cellIndex].appendChild(eventEl);
+    }
   }
+}
+
 
   /** 
    * Modal handling 
