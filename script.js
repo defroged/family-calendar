@@ -35,28 +35,36 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   var dayEventsMap = {};
   var today = new Date();
   var currentYear = today.getFullYear();
-  var currentMonth = today.getMonth(); // 0-based (0 = January)
+  var currentMonth = today.getMonth(); // 0-based
 
-  // Calendar element references
+  // References
   var headerEl = document.getElementById("calendar-header");
   var calendarDaysEl = document.getElementById("calendar-days");
   var calendarContainer = document.getElementById("calendar-container");
 
-  // Month names for the header
+  // Create a "Today" button in the header (top-left corner)
+  var todayBtn = document.createElement("button");
+  todayBtn.textContent = "Today";
+  todayBtn.style.float = "left";
+  todayBtn.style.marginRight = "10px";
+  todayBtn.addEventListener("click", resetToCurrentMonth);
+  headerEl.parentNode.insertBefore(todayBtn, headerEl);
+
+  // Month names for display
   var monthNames = [
     "January", "February", "March", "April", "May", "June", 
     "July", "August", "September", "October", "November", "December"
   ];
 
+  // We'll keep track of whether we're animating a swipe
+  var isAnimating = false;
+
   // -------------------------
-  // Build Calendar & Fetch
+  // Build Calendar & Events
   // -------------------------
   buildCalendar(currentYear, currentMonth);
   fetchEventsForAllCalendars();
 
-  /**
-   * Creates/updates the calendar layout for a given year and month
-   */
   function buildCalendar(year, month) {
     // Clear dayEventsMap whenever we rebuild
     dayEventsMap = {};
@@ -73,32 +81,31 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
     var daysInMonth = new Date(year, month + 1, 0).getDate();
 
     // Insert blank cells before day 1
-    var i;
-    for (i = 0; i < startDay; i++) {
+    for (var i = 0; i < startDay; i++) {
       var blankCell = document.createElement("div");
       blankCell.className = "day-cell";
       calendarDaysEl.appendChild(blankCell);
     }
 
     // Add actual day cells
-    for (i = 1; i <= daysInMonth; i++) {
+    for (var d = 1; d <= daysInMonth; d++) {
       var dayCell = document.createElement("div");
       dayCell.className = "day-cell";
 
       var dayNumber = document.createElement("span");
       dayNumber.className = "day-number";
-      dayNumber.textContent = i;
+      dayNumber.textContent = d;
       dayCell.appendChild(dayNumber);
 
       // Initialize storage
-      dayEventsMap[i] = [];
+      dayEventsMap[d] = [];
 
       // Click -> open modal
       dayCell.addEventListener("click", (function(dayNum) {
         return function() {
           openModal(dayNum);
         };
-      })(i));
+      })(d));
 
       calendarDaysEl.appendChild(dayCell);
     }
@@ -111,27 +118,72 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
     timeMax = toRFC3339(endDate);
   }
 
-  /**
-   * Move to the next month, then rebuild calendar + fetch events
-   */
   function showNextMonth() {
+    if (isAnimating) return;
     currentMonth++;
     if (currentMonth > 11) {
       currentMonth = 0;
       currentYear++;
     }
+    animateSwipe(-1, function() {
+      buildCalendar(currentYear, currentMonth);
+      fetchEventsForAllCalendars();
+    });
+  }
+
+  function showPreviousMonth() {
+    if (isAnimating) return;
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    animateSwipe(1, function() {
+      buildCalendar(currentYear, currentMonth);
+      fetchEventsForAllCalendars();
+    });
+  }
+
+  function resetToCurrentMonth() {
+    if (isAnimating) return;
+    currentYear = today.getFullYear();
+    currentMonth = today.getMonth();
     buildCalendar(currentYear, currentMonth);
     fetchEventsForAllCalendars();
   }
 
   // -------------------------
-  // Swipe / Touch handling
+  // Animation for Swipes
+  // -------------------------
+  function animateSwipe(direction, callback) {
+    // direction = -1 means swipe left, +1 means swipe right
+    // We'll apply a temporary transform to the calendar container
+    isAnimating = true;
+    var initialPos = 0;
+    var finalPos = direction * 100; // percent-based shift
+
+    // Add a CSS transition
+    calendarContainer.style.transition = "transform 0.3s ease";
+    calendarContainer.style.transform = "translateX(" + finalPos + "%)";
+
+    // After the transition ends, reset
+    var onTransitionEnd = function() {
+      calendarContainer.style.transition = "none";
+      calendarContainer.style.transform = "translateX(0)";
+      calendarContainer.removeEventListener("transitionend", onTransitionEnd);
+      isAnimating = false;
+      if (callback) callback();
+    };
+    calendarContainer.addEventListener("transitionend", onTransitionEnd);
+  }
+
+  // -------------------------
+  // Swipe / Touch Handling
   // -------------------------
   var startX = null;
   var endX = null;
-  var threshold = 50;  // Minimum swipe distance
+  var threshold = 50; // Minimum swipe distance
 
-  // Listen for touch events on the calendar container
   calendarContainer.addEventListener("touchstart", function(e) {
     if (e.touches.length === 1) {
       startX = e.touches[0].clientX;
@@ -148,8 +200,11 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
     if (startX !== null && endX !== null) {
       var deltaX = startX - endX;
       if (deltaX > threshold) {
-        // User scrolled right (swiped left) -> show next month
+        // swipe left -> show next
         showNextMonth();
+      } else if (deltaX < -threshold) {
+        // swipe right -> show previous
+        showPreviousMonth();
       }
     }
     startX = null;
@@ -157,19 +212,16 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   });
 
   // -------------------------
-  // Google Calendar Fetch
+  // GCal Data Fetch
   // -------------------------
   var timeMin, timeMax;
-
   function fetchEventsForAllCalendars() {
     function fetchEvents() {
       for (var i = 0; i < CALENDARS.length; i++) {
         fetchEventsForOneCalendar(CALENDARS[i]);
       }
     }
-    // Initial fetch
     fetchEvents();
-    // Refresh events every 5 minutes
     setInterval(function() {
       fetchEvents();
     }, 300000);
@@ -199,7 +251,6 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   function renderEvents(items, calendar) {
     for (var i = 0; i < items.length; i++) {
       var ev = items[i];
-
       var startStr = ev.start.dateTime
         ? ev.start.dateTime
         : (ev.start.date + "T00:00:00");
@@ -224,13 +275,12 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
       }
       dayEventsMap[day].push(eventInfo);
     }
-    // After storing events, refresh day cells
     refreshDayCells();
   }
 
-  /**
-   * Clear and re-render the day-cell events for the current month
-   */
+  // -------------------------
+  // Refresh
+  // -------------------------
   function refreshDayCells() {
     var firstDayOfMonth = new Date(currentYear, currentMonth, 1);
     var startDay = firstDayOfMonth.getDay();
@@ -242,18 +292,15 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
       if (cellIndex >= 0 && cellIndex < dayCells.length) {
         var dayCell = dayCells[cellIndex];
 
-        // Remove any existing event markers in this cell
         while (dayCell.getElementsByClassName("event")[0]) {
           dayCell.removeChild(dayCell.getElementsByClassName("event")[0]);
         }
 
-        // Sort events by ascending start time
         var eventsForDay = dayEventsMap[d] || [];
         eventsForDay.sort(function(a, b) {
           return a.start - b.start;
         });
 
-        // Re-append them in chronological order
         for (var j = 0; j < eventsForDay.length; j++) {
           var eventEl = document.createElement("div");
           eventEl.className = "event";
@@ -267,7 +314,7 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   }
 
   // -------------------------
-  // Modal Handling
+  // Modal
   // -------------------------
   var modalOverlay = document.getElementById("modal-overlay");
   var modalContent = document.getElementById("modal-content");
@@ -333,9 +380,6 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
     return hh + ":" + mm;
   }
 
-  /**
-   * Converts a JS Date object into an RFC3339 string (YYYY-MM-DDTHH:MM:SSZ)
-   */
   function toRFC3339(dateObj) {
     return dateObj.getFullYear() + "-" +
       pad(dateObj.getMonth() + 1) + "-" +
@@ -348,6 +392,6 @@ var API_KEY = "AIzaSyAJkLCd0IJ2dPxLeijCUO7HClOwSoy5j-Q";
   function pad(num) {
     return (num < 10 ? "0" : "") + num;
   }
-
 })();
+
 
