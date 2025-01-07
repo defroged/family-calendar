@@ -45,6 +45,7 @@ body, html {
 
 .day-cell {
   vertical-align: top;
+  cursor: pointer; /* helps users see it’s clickable */
 }
 
 .day-number {
@@ -60,4 +61,47 @@ body, html {
   border-left: 3px solid #007bff;
   font-size: 12px;
   text-align: left;
+}
+
+/* Modal styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none; /* initially hidden */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 5px;
+  width: 400px;
+  max-width: 90%;
+  padding: 20px;
+  position: relative;
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.modal-events-list {
+  margin-top: 40px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.modal-event-item {
+  margin-bottom: 8px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 4px;
 }
