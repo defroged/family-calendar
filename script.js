@@ -403,7 +403,7 @@ function groupConsecutiveEventsForDisplay(events) {
         var blockHeight = ((endMinutes - startMinutes) / totalMinutesInDay) * dayCellHeight;
 
         // Enforce a minimum size (e.g., 12px)
-        blockHeight = Math.max(blockHeight, 12);
+        blockHeight = Math.max(blockHeight, 22);
 
         // Create block
         var eventEl = document.createElement("div");
