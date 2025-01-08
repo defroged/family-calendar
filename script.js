@@ -233,16 +233,19 @@ headerEl.parentNode.insertBefore(todayBtn, headerEl);
   // -------------------------
   var timeMin, timeMax;
   function fetchEventsForAllCalendars() {
-    function fetchEvents() {
-      for (var i = 0; i < CALENDARS.length; i++) {
-        fetchEventsForOneCalendar(CALENDARS[i]);
-      }
+  // We still call fetchEvents once initially,
+  // but we will refresh the entire page every 30 minutes.
+  function fetchEvents() {
+    for (var i = 0; i < CALENDARS.length; i++) {
+      fetchEventsForOneCalendar(CALENDARS[i]);
     }
-    fetchEvents();
-    setInterval(function() {
-      fetchEvents();
-    }, 300000);
   }
+  fetchEvents();
+  setInterval(function() {
+    location.reload();
+  }, 1800000); // 30 minutes = 1800000ms
+}
+
 
   function fetchEventsForOneCalendar(calendar) {
     var url = "https://www.googleapis.com/calendar/v3/calendars/" +
