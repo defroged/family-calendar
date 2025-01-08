@@ -61,7 +61,7 @@ html, body {
 .day-cell {
   position: relative;       /* for absolutely positioned .event inside */
   width: 14.2857%;
-  height: 145px;            /* try 120px or more to see morning/noon/afternoon visually */
+  height: 140px;            /* try 120px or more to see morning/noon/afternoon visually */
   box-sizing: border-box;
   border: 1px solid #272829;
   text-align: center;
