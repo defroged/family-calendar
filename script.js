@@ -398,7 +398,7 @@ function groupConsecutiveEventsForDisplay(events) {
           endMinutes = 60;
         }
 
-        var totalMinutesInDay = 24 * 60;
+        var totalMinutesInDay = 14 * 60;
         var topOffset = (startMinutes / totalMinutesInDay) * dayCellHeight;
         var blockHeight = ((endMinutes - startMinutes) / totalMinutesInDay) * dayCellHeight;
 
