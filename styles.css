@@ -80,11 +80,9 @@ html, body {
 .event {
   margin: 2px 0;
   padding: 2px;
-  border-left: 3px solid #007bff;
-  font-size: 12px;
+  font-size: 15px;
   text-align: left;
-  background: #131314;
-  color: #cacaca;
+  color: #131314;
 }
 
 /* Modal styling */
