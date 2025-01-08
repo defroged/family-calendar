@@ -5,6 +5,11 @@ var CALENDARS = [
     color: "#489160"
   },
     {
+    id: "5fb90aa40e9e7b564d69a8ffd96a610cf1a0418e9ff100bb8cf1520a8c2b751b@group.calendar.google.com",
+    label: "その他",
+    color: "#d85675"
+  },
+    {
     id: "tm-kids.com_i066m9p1pvu8ouuknb4hal74u4@group.calendar.google.com",
     label: "本町",
     color: "orange"
