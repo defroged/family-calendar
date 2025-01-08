@@ -362,20 +362,17 @@ function groupConsecutiveEventsForDisplay(events) {
         dayCell.removeChild(dayCell.getElementsByClassName("event")[0]);
       }
 
-      // Sort events for the day
       var eventsForDay = dayEventsMap[d] || [];
       eventsForDay.sort(function(a, b) {
         return a.start - b.start;
       });
 
-      // Group consecutive events by label
       var groupedEvents = groupConsecutiveEventsForDisplay(eventsForDay);
 
-      // For each group, figure out earliest start + latest end
       for (var j = 0; j < groupedEvents.length; j++) {
         var group = groupedEvents[j];
 
-        // Find earliest start and latest end among the group's events
+        // Find earliest start and latest end
         var earliestStart = group.events[0].start.getTime();
         var latestEnd = group.events[0].end.getTime();
         for (var k = 0; k < group.events.length; k++) {
@@ -385,47 +382,43 @@ function groupConsecutiveEventsForDisplay(events) {
           if (evEnd > latestEnd) latestEnd = evEnd;
         }
 
-        // Convert those to hours/minutes as a fraction of the day
-        // dayCellHeight used below is the CSS-defined height
         var dayCellHeight = dayCell.clientHeight;
-
         var startDateObj = new Date(earliestStart);
         var endDateObj   = new Date(latestEnd);
 
         var startMinutes = startDateObj.getHours() * 60 + startDateObj.getMinutes();
         var endMinutes   = endDateObj.getHours() * 60 + endDateObj.getMinutes();
 
-        // If all-day or no times, just default them to 0 and a small chunk
-        if (startDateObj.getHours() === 0 && startDateObj.getMinutes() === 0 &&
-            endDateObj.getHours() === 23 && endDateObj.getMinutes() === 59) {
+        // If all-day or no times, default them
+        if (
+          startDateObj.getHours() === 0 && startDateObj.getMinutes() === 0 &&
+          endDateObj.getHours() === 23 && endDateObj.getMinutes() === 59
+        ) {
           startMinutes = 0;
-          endMinutes = 60; // a small chunk to see something
+          endMinutes = 60;
         }
 
-        // Calculate top offset and height in px
         var totalMinutesInDay = 24 * 60;
         var topOffset = (startMinutes / totalMinutesInDay) * dayCellHeight;
         var blockHeight = ((endMinutes - startMinutes) / totalMinutesInDay) * dayCellHeight;
 
-        // Create one block for the group
+        // Enforce a minimum size (e.g., 12px)
+        blockHeight = Math.max(blockHeight, 12);
+
+        // Create block
         var eventEl = document.createElement("div");
         eventEl.className = "event";
-
-        // Position absolutely
         eventEl.style.position = "absolute";
         eventEl.style.top = topOffset + "px";
         eventEl.style.left = "0";
         eventEl.style.width = "100%";
         eventEl.style.height = blockHeight + "px";
-
-        // Center the label, apply color
         eventEl.style.display = "flex";
         eventEl.style.alignItems = "center";
         eventEl.style.justifyContent = "center";
         eventEl.style.background = group.color;
         eventEl.style.borderLeft = "3px solid " + group.color;
 
-        // Single label
         eventEl.textContent = group.label;
         dayCell.appendChild(eventEl);
       }
