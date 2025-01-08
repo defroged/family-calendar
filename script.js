@@ -310,6 +310,7 @@ function groupConsecutiveEventsForDisplay(events) {
   var groups = [];
   var currentGroup = null;
   var previousEvent = null;
+  var THIRTY_MINUTES = 30 * 60 * 1000; // 30 minutes in ms
 
   for (var i = 0; i < events.length; i++) {
     var e = events[i];
@@ -319,17 +320,16 @@ function groupConsecutiveEventsForDisplay(events) {
       currentGroup = {
         label: e.calendarLabel,
         color: e.calendarColor,
-        events: [ e ] // Store event objects
+        events: [ e ]
       };
       groups.push(currentGroup);
       previousEvent = e;
     } else {
       // Check if we can merge with the currentGroup
+      // Condition: same label AND the gap between this event and the previous event is <= 30 min
       if (
-        // same label?
         currentGroup.label === e.calendarLabel &&
-        // is end time of the previous event == start time of this one?
-        previousEvent.end.getTime() === e.start.getTime()
+        (e.start.getTime() - previousEvent.end.getTime()) <= THIRTY_MINUTES
       ) {
         // Merge: add this event
         currentGroup.events.push(e);
@@ -348,6 +348,7 @@ function groupConsecutiveEventsForDisplay(events) {
 
   return groups;
 }
+
 
   function refreshDayCells() {
   var firstDayOfMonth = new Date(currentYear, currentMonth, 1);
