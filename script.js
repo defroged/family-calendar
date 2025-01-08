@@ -377,54 +377,61 @@ function groupConsecutiveEventsForDisplay(events) {
       for (var j = 0; j < groupedEvents.length; j++) {
         var group = groupedEvents[j];
 
-        // Find earliest start and latest end among all events in the group
-        var earliestStart = group.events[0].start.getTime();
-        var latestEnd = group.events[0].end.getTime();
-        for (var k = 0; k < group.events.length; k++) {
-          var evStart = group.events[k].start.getTime();
-          var evEnd = group.events[k].end.getTime();
-          if (evStart < earliestStart) earliestStart = evStart;
-          if (evEnd > latestEnd) latestEnd = evEnd;
-        }
+// ---------------------
+// Calculate position & size of the group block
+// ---------------------
 
-        var dayCellHeight = dayCell.clientHeight;
-        var startDateObj = new Date(earliestStart);
-        var endDateObj   = new Date(latestEnd);
+// We'll place the group block according to the earliestStart for its topOffset,
+// but we'll compute the total duration of all consecutive events for its height.
+var dayCellHeight = dayCell.clientHeight;
 
-        // Convert to minutes after midnight
-        var startMinutes = startDateObj.getHours() * 60 + startDateObj.getMinutes();
-        var endMinutes   = endDateObj.getHours() * 60 + endDateObj.getMinutes();
+// First, find the earliest start time among all events (for positioning):
+var earliestStart = group.events[0].start.getTime();
+for (var k = 1; k < group.events.length; k++) {
+  var evStart = group.events[k].start.getTime();
+  if (evStart < earliestStart) {
+    earliestStart = evStart;
+  }
+}
 
-        // Clamp start/end so nothing goes above 8 AM or below 10 PM
-        if (startMinutes < START_OF_DAY) {
-          startMinutes = START_OF_DAY;
-        }
-        if (endMinutes > END_OF_DAY) {
-          endMinutes = END_OF_DAY;
-        }
+// Convert earliestStart to minutes after midnight and clamp:
+var earliestStartDateObj = new Date(earliestStart);
+var earliestStartMinutes = earliestStartDateObj.getHours() * 60 + earliestStartDateObj.getMinutes();
 
-        // If all-day (like 00:00-23:59), clamp it to show “full” span
-        if (
-          startDateObj.getHours() === 0 && startDateObj.getMinutes() === 0 &&
-          endDateObj.getHours() === 23 && endDateObj.getMinutes() === 59
-        ) {
-          startMinutes = START_OF_DAY;
-          endMinutes   = END_OF_DAY;
-        }
+if (earliestStartMinutes < START_OF_DAY) {
+  earliestStartMinutes = START_OF_DAY;
+}
 
-        // Compute fraction of the compressed 8 AM - 10 PM day
-        var adjustedStart = startMinutes - START_OF_DAY; 
-        var adjustedEnd   = endMinutes - START_OF_DAY; 
-        if (adjustedEnd < adjustedStart) {
-          // In case the event is fully before 8 or fully after 10
-          adjustedEnd = adjustedStart;
-        }
+// We'll use this to set the topOffset of our block:
+var adjustedEarliest = earliestStartMinutes - START_OF_DAY;
+if (adjustedEarliest < 0) {
+  adjustedEarliest = 0;
+}
+var topOffset = (adjustedEarliest / TOTAL_RANGE) * dayCellHeight;
 
-        var topOffset  = (adjustedStart / TOTAL_RANGE) * dayCellHeight;
-        var blockHeight = ((adjustedEnd - adjustedStart) / TOTAL_RANGE) * dayCellHeight;
+// Next, sum up the duration (in minutes) of all events in this group (each event is consecutive).
+var totalDurationMinutes = 0;
+for (var m = 0; m < group.events.length; m++) {
+  // For each event, clamp its start and end times to 8 AM / 10 PM
+  var evStartObj = group.events[m].start;
+  var evEndObj   = group.events[m].end;
 
-        // Enforce a minimum size (e.g. 22px)
-        blockHeight = Math.max(blockHeight, 22);
+  var evStartMin = evStartObj.getHours() * 60 + evStartObj.getMinutes();
+  var evEndMin   = evEndObj.getHours() * 60 + evEndObj.getMinutes();
+
+  if (evStartMin < START_OF_DAY) evStartMin = START_OF_DAY;
+  if (evEndMin   > END_OF_DAY)   evEndMin   = END_OF_DAY;
+  if (evEndMin < evStartMin) evEndMin = evStartMin; // edge case if outside range
+
+  totalDurationMinutes += (evEndMin - evStartMin);
+}
+
+// Compute block height based on total duration of all consecutive events:
+var blockHeight = (totalDurationMinutes / TOTAL_RANGE) * dayCellHeight;
+
+// Enforce a minimum size (e.g. 22px)
+blockHeight = Math.max(blockHeight, 22);
+
 
         // Create the event block
         var eventEl = document.createElement("div");
