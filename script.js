@@ -427,9 +427,9 @@ for (var m = 0; m < group.events.length; m++) {
 }
 
 // Compute block height based on total duration of all consecutive events:
-var scaleFactor = 1.5;  // double the height (use 1.5 or 1.2, etc., as needed)
+var scaleFactor = 1.2;  // double the height (use 1.5 or 1.2, etc., as needed)
 var blockHeight = ((totalDurationMinutes / TOTAL_RANGE) * dayCellHeight) * scaleFactor;
-blockHeight = Math.max(blockHeight, 18 * scaleFactor);
+blockHeight = Math.max(blockHeight, 16 * scaleFactor);
 
 
         // Create the event block
