@@ -299,24 +299,39 @@ headerEl.parentNode.insertBefore(todayBtn, headerEl);
 function groupConsecutiveEventsForDisplay(events) {
   if (!events || events.length === 0) return [];
 
+  // Sort by start time to ensure consecutive order
+  events.sort(function(a, b) {
+    return a.start.getTime() - b.start.getTime();
+  });
+
   var groups = [];
   var currentGroup = null;
+  var previousEvent = null;
 
   for (var i = 0; i < events.length; i++) {
     var e = events[i];
 
-    // If first group or new label/time sequence
     if (!currentGroup) {
+      // first group
       currentGroup = {
         label: e.calendarLabel,
         color: e.calendarColor,
         count: 1
       };
       groups.push(currentGroup);
+      previousEvent = e;
     } else {
-      if (currentGroup.label === e.calendarLabel) {
+      // Check if we can merge with the currentGroup
+      if (
+        // same label?
+        currentGroup.label === e.calendarLabel &&
+        // is end time of the previous event == start time of this one?
+        previousEvent.end.getTime() === e.start.getTime()
+      ) {
+        // Increase count for the existing group
         currentGroup.count++;
       } else {
+        // Start a new group
         currentGroup = {
           label: e.calendarLabel,
           color: e.calendarColor,
@@ -324,6 +339,7 @@ function groupConsecutiveEventsForDisplay(events) {
         };
         groups.push(currentGroup);
       }
+      previousEvent = e;
     }
   }
 
@@ -331,60 +347,60 @@ function groupConsecutiveEventsForDisplay(events) {
 }
 
   function refreshDayCells() {
-    var firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-    var startDay = firstDayOfMonth.getDay();
-    var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
+  var firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+  var startDay = firstDayOfMonth.getDay();
+  var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
 
-    for (var d = 1; d <= daysInMonth; d++) {
-      var cellIndex = startDay + d - 1;
-      if (cellIndex >= 0 && cellIndex < dayCells.length) {
-        var dayCell = dayCells[cellIndex];
+  for (var d = 1; d <= daysInMonth; d++) {
+    var cellIndex = startDay + d - 1;
+    if (cellIndex >= 0 && cellIndex < dayCells.length) {
+      var dayCell = dayCells[cellIndex];
 
-        while (dayCell.getElementsByClassName("event")[0]) {
-          dayCell.removeChild(dayCell.getElementsByClassName("event")[0]);
-        }
+      // Remove any existing event elements
+      while (dayCell.getElementsByClassName("event")[0]) {
+        dayCell.removeChild(dayCell.getElementsByClassName("event")[0]);
+      }
 
-        var eventsForDay = dayEventsMap[d] || [];
-        eventsForDay.sort(function(a, b) {
-          return a.start - b.start;
-        });
+      // Sort events for the day
+      var eventsForDay = dayEventsMap[d] || [];
+      eventsForDay.sort(function(a, b) {
+        return a.start - b.start;
+      });
 
-        // Group consecutive events by label (for display only)
-var groupedEvents = groupConsecutiveEventsForDisplay(eventsForDay);
+      // Group consecutive events by label
+      var groupedEvents = groupConsecutiveEventsForDisplay(eventsForDay);
 
-for (var j = 0; j < groupedEvents.length; j++) {
-  var group = groupedEvents[j];
+      for (var j = 0; j < groupedEvents.length; j++) {
+        var group = groupedEvents[j];
 
-  // Create one block for the group
-  var eventEl = document.createElement("div");
-  eventEl.className = "event";
+        // Create one block for the group
+        var eventEl = document.createElement("div");
+        eventEl.className = "event";
 
-  // This block should be as tall as the number of merged events
-  // Let's assume each single event is about 20px tall. 
-  // Adjust the factor as desired.
-  var singleEventHeight = 20; 
-  var totalHeight = group.count * singleEventHeight + "px";
-  eventEl.style.height = totalHeight;
-  
-  // Center the label in this block
-  eventEl.style.display = "flex";
-  eventEl.style.alignItems = "center";
-  eventEl.style.justifyContent = "center";
+        // This block should be as tall as the total number of merged events
+        var singleEventHeight = 20;
+        var totalHeight = group.count * singleEventHeight + "px";
+        eventEl.style.height = totalHeight;
 
-  // Use the group's color
-  eventEl.style.background = group.color;
-  eventEl.style.borderLeft = "3px solid " + group.color;
+        // Center the label
+        eventEl.style.display = "flex";
+        eventEl.style.alignItems = "center";
+        eventEl.style.justifyContent = "center";
 
-  // Single label
-  eventEl.textContent = group.label;
+        // Apply group color
+        eventEl.style.background = group.color;
+        eventEl.style.borderLeft = "3px solid " + group.color;
 
-  dayCell.appendChild(eventEl);
-}
+        // Single label
+        eventEl.textContent = group.label;
 
+        dayCell.appendChild(eventEl);
       }
     }
   }
+}
+
 
   // -------------------------
   // Modal
