@@ -352,6 +352,11 @@ function groupConsecutiveEventsForDisplay(events) {
   var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   var dayCells = calendarDaysEl.getElementsByClassName("day-cell");
 
+  // Define our compressed day range in minutes: 8 AM (480) to 10 PM (1320).
+  var START_OF_DAY = 8 * 60;   // 8:00 => 480 minutes after midnight
+  var END_OF_DAY   = 22 * 60;  // 22:00 => 1320 minutes
+  var TOTAL_RANGE  = END_OF_DAY - START_OF_DAY; // 1320 - 480 = 840 minutes
+
   for (var d = 1; d <= daysInMonth; d++) {
     var cellIndex = startDay + d - 1;
     if (cellIndex >= 0 && cellIndex < dayCells.length) {
@@ -372,7 +377,7 @@ function groupConsecutiveEventsForDisplay(events) {
       for (var j = 0; j < groupedEvents.length; j++) {
         var group = groupedEvents[j];
 
-        // Find earliest start and latest end
+        // Find earliest start and latest end among all events in the group
         var earliestStart = group.events[0].start.getTime();
         var latestEnd = group.events[0].end.getTime();
         for (var k = 0; k < group.events.length; k++) {
@@ -386,26 +391,42 @@ function groupConsecutiveEventsForDisplay(events) {
         var startDateObj = new Date(earliestStart);
         var endDateObj   = new Date(latestEnd);
 
+        // Convert to minutes after midnight
         var startMinutes = startDateObj.getHours() * 60 + startDateObj.getMinutes();
         var endMinutes   = endDateObj.getHours() * 60 + endDateObj.getMinutes();
 
-        // If all-day or no times, default them
+        // Clamp start/end so nothing goes above 8 AM or below 10 PM
+        if (startMinutes < START_OF_DAY) {
+          startMinutes = START_OF_DAY;
+        }
+        if (endMinutes > END_OF_DAY) {
+          endMinutes = END_OF_DAY;
+        }
+
+        // If all-day (like 00:00-23:59), clamp it to show “full” span
         if (
           startDateObj.getHours() === 0 && startDateObj.getMinutes() === 0 &&
           endDateObj.getHours() === 23 && endDateObj.getMinutes() === 59
         ) {
-          startMinutes = 0;
-          endMinutes = 60;
+          startMinutes = START_OF_DAY;
+          endMinutes   = END_OF_DAY;
         }
 
-        var totalMinutesInDay = 14 * 60;
-        var topOffset = (startMinutes / totalMinutesInDay) * dayCellHeight;
-        var blockHeight = ((endMinutes - startMinutes) / totalMinutesInDay) * dayCellHeight;
+        // Compute fraction of the compressed 8 AM - 10 PM day
+        var adjustedStart = startMinutes - START_OF_DAY; 
+        var adjustedEnd   = endMinutes - START_OF_DAY; 
+        if (adjustedEnd < adjustedStart) {
+          // In case the event is fully before 8 or fully after 10
+          adjustedEnd = adjustedStart;
+        }
 
-        // Enforce a minimum size (e.g., 12px)
+        var topOffset  = (adjustedStart / TOTAL_RANGE) * dayCellHeight;
+        var blockHeight = ((adjustedEnd - adjustedStart) / TOTAL_RANGE) * dayCellHeight;
+
+        // Enforce a minimum size (e.g. 22px)
         blockHeight = Math.max(blockHeight, 22);
 
-        // Create block
+        // Create the event block
         var eventEl = document.createElement("div");
         eventEl.className = "event";
         eventEl.style.position = "absolute";
