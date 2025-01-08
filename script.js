@@ -295,7 +295,7 @@ headerEl.parentNode.insertBefore(todayBtn, headerEl);
     refreshDayCells();
   }
 
-/*
+
 function groupConsecutiveEventsForDisplay(events) {
   if (!events || events.length === 0) return [];
 
@@ -345,7 +345,7 @@ function groupConsecutiveEventsForDisplay(events) {
 
   return groups;
 }
-*/
+
   function refreshDayCells() {
   var firstDayOfMonth = new Date(currentYear, currentMonth, 1);
   var startDay = firstDayOfMonth.getDay();
@@ -357,69 +357,49 @@ function groupConsecutiveEventsForDisplay(events) {
     if (cellIndex >= 0 && cellIndex < dayCells.length) {
       var dayCell = dayCells[cellIndex];
 
-      // Remove any existing .event elements
+      // Remove any existing event elements
       while (dayCell.getElementsByClassName("event")[0]) {
         dayCell.removeChild(dayCell.getElementsByClassName("event")[0]);
       }
 
-      // Ensure dayCell can hold absolutely positioned elements
-      dayCell.style.position = "relative";
-
-      // Gather events
+      // Sort events for the day
       var eventsForDay = dayEventsMap[d] || [];
-      // Sort events so earlier ones come first
       eventsForDay.sort(function(a, b) {
         return a.start - b.start;
       });
 
-      // Loop through each event
-      for (var i = 0; i < eventsForDay.length; i++) {
-        var evt = eventsForDay[i];
+      // Group consecutive events by label
+      var groupedEvents = groupConsecutiveEventsForDisplay(eventsForDay);
 
-        // Calculate fraction of the day for top offset
-        // 1440 = total minutes in a day
-        var startMinutes = evt.start.getHours() * 60 + evt.start.getMinutes();
-        var endMinutes = evt.end.getHours() * 60 + evt.end.getMinutes();
-        var dayCellHeight = 150; // or whatever fits your layout
+      for (var j = 0; j < groupedEvents.length; j++) {
+        var group = groupedEvents[j];
 
-        // The top offset is the fraction of the day times dayCellHeight
-        var topPos = (startMinutes / 1440) * dayCellHeight;
-        // Height in px based on duration
-        var duration = endMinutes - startMinutes;
-        if (duration < 0) {
-          // Edge case: event runs past midnight or invalid time
-          duration = 60; 
-        }
-        var blockHeight = (duration / 1440) * dayCellHeight;
-        if (blockHeight < 15) {
-          // Give a minimum height for short events
-          blockHeight = 15;
-        }
-
-        // Create the event element
+        // Create one block for the group
         var eventEl = document.createElement("div");
         eventEl.className = "event";
-        eventEl.style.position = "absolute";
-        eventEl.style.left = "0";
-        eventEl.style.right = "0";
-        eventEl.style.top = topPos + "px";
-        eventEl.style.height = blockHeight + "px";
-        eventEl.style.backgroundColor = evt.calendarColor;
-        eventEl.style.borderLeft = "3px solid " + evt.calendarColor;
+
+        // This block should be as tall as the total number of merged events
+        var singleEventHeight = 20;
+        var totalHeight = group.count * singleEventHeight + "px";
+        eventEl.style.height = totalHeight;
+
+        // Center the label
         eventEl.style.display = "flex";
         eventEl.style.alignItems = "center";
         eventEl.style.justifyContent = "center";
-        eventEl.style.overflow = "hidden";
-        
-        // Label
-        eventEl.textContent = evt.summary || "(No Title)";
-        
+
+        // Apply group color
+        eventEl.style.background = group.color;
+        eventEl.style.borderLeft = "3px solid " + group.color;
+
+        // Single label
+        eventEl.textContent = group.label;
+
         dayCell.appendChild(eventEl);
       }
     }
   }
 }
-
 
 
   // -------------------------
