@@ -79,11 +79,12 @@ html, body {
 }
 
 .event {
-  margin: 2px 0;
+  margin: 2px 0px;
   padding: 2px;
   font-size: 15px;
   text-align: left;
   color: #131314;
+  border-radius: 6px;
 }
 
 /* Modal styling */
